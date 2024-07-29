@@ -1,5 +1,6 @@
 { modulesPath, ... }: {
   imports = [
+    (modulesPath + "/profiles/headless.nix")
     (modulesPath + "/installer/scan/not-detected.nix")
     (modulesPath + "/profiles/qemu-guest.nix")
   ];
@@ -54,8 +55,9 @@
   #
   # Use the GRUB 2 boot loader.
   boot.loader.grub.enable = true;
-  boot.loader.grub.efiSupport = false;
+  boot.loader.grub.efiSupport = true;
   boot.loader.grub.efiInstallAsRemovable = false;
+
   # Configure with LVM with disko???
   # Define on which hard drive you want to install Grub.
   # boot.loader.grub.device = "/dev/sda"; # or "nodev" for efi only
@@ -67,5 +69,15 @@
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
+  # NOTE: Probably use boot.iscsi-initiator instead of services.openiscsi
+  # since the boot device itself is an iSCSI volume
+  #
+  # services.openiscsi.enable = true;
+  # services.openiscsi.name = "";
+
+  # initiatorname.iscsi: InitiatorName=iqn.1988-12.com.oracle:0a4e0f3bcde
+  #iscsiadm -m node -T iqn.2015-02.oracle.boot:uefi -o show | grep node.startup
+  #iscsiadm -m node -T iqn.2015-02.oracle.boot:uefi -p 169.254.0.2:3260 -o update -n node.startup -v onboot
+  #iscsiadm -m node -T iqn.2015-02.oracle.boot:uefi -o show | grep node.startup
 }
 
