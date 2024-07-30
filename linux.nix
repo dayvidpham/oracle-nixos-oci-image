@@ -65,7 +65,8 @@
     shell = pkgs.zsh;
     extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
     openssh.authorizedKeys.keys = [
-      (builtins.readFile ./id_ed25519.pub)
+      # desktop-windows-wsl
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJDiMx4rHgmNc/fwHcffw8pRT2xfsUtfgnUKjKxRIWeG minttea@wsl"
     ];
   };
 
