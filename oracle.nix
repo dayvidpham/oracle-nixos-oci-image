@@ -1,8 +1,25 @@
-{ modulesPath, ... }: {
+{ modulesPath
+, config
+, ...
+}:
+let
+  iscsiDiscoverPortal = "169.254.0.2:3260";
+  iscsiInitiatorName = "iqn.1988-12.com.oracle:0a4e0f3bcde";
+  iscsiTarget = "iqn.2015-02.oracle.boot:uefi";
+  iscsiExtraConfig = ''
+    echo "Before: "
+    iscsiadm -m node -T ${iscsiTarget} -o show | grep node.startup
+    iscsiadm -m node -T ${iscsiTarget} -p ${iscsiDiscoverPortal} -o update -n node.startup -v onboot
+    echo "After: "
+    iscsiadm -m node -T ${iscsiTarget} -o show | grep node.startup
+  '';
+
+in
+{
   imports = [
-    (modulesPath + "/profiles/headless.nix")
     (modulesPath + "/installer/scan/not-detected.nix")
     (modulesPath + "/profiles/qemu-guest.nix")
+    (modulesPath + "/profiles/headless.nix")
   ];
 
   services.fail2ban.enable = true;
@@ -69,15 +86,25 @@
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
-  # NOTE: Probably use boot.iscsi-initiator instead of services.openiscsi
-  # since the boot device itself is an iSCSI volume
-  #
-  # services.openiscsi.enable = true;
-  # services.openiscsi.name = "";
+  # Oracle Cloud uses iSCSI for boot volume
+  boot.iscsi-initiator.discoverPortal = iscsiDiscoverPortal;
+  boot.iscsi-initiator.name = iscsiInitiatorName;
+  boot.iscsi-initiator.target = iscsiTarget;
+  boot.iscsi-initiator.extraConfig = iscsiExtraConfig;
+  boot.iscsi-initiator.extraIscsiCommands = iscsiExtraConfig;
+
+  services.openiscsi.enable = true;
+  services.openiscsi.discoverPortal = iscsiDiscoverPortal;
+  services.openiscsi.name = iscsiInitiatorName;
+  services.openiscsi.target = iscsiTarget;
+  services.openiscsi.extraConfig = iscsiExtraConfig;
 
   # initiatorname.iscsi: InitiatorName=iqn.1988-12.com.oracle:0a4e0f3bcde
   #iscsiadm -m node -T iqn.2015-02.oracle.boot:uefi -o show | grep node.startup
   #iscsiadm -m node -T iqn.2015-02.oracle.boot:uefi -p 169.254.0.2:3260 -o update -n node.startup -v onboot
   #iscsiadm -m node -T iqn.2015-02.oracle.boot:uefi -o show | grep node.startup
+
+  # WARN: Might need to set boot.initrd like:
+  # https://github.com/pharra/nix-config/blob/c58ddea23a3b3bc779867f0e61ae08cf96173a52/hosts/installer/netboot.nix#L33
 }
 
